@@ -23,6 +23,7 @@ resource "random_string" "main" {
 resource "google_compute_network" "main" {
   project                 = data.google_client_config.main.project
   name                    = "${local.prefix}vpc"
+  auto_create_subnetworks = false
 }
 
 resource "google_compute_subnetwork" "main" {
