@@ -13,8 +13,8 @@ locals {
 data "google_client_config" "main" {}
 
 resource "random_string" "main" {
-  length      = 5
-  min_lower   = 5
+  length      = 3
+  min_lower   = 3
   special     = false
 }
 
@@ -22,7 +22,7 @@ module "vpc" {
   source       = "terraform-google-modules/network/google"
   version      = "~> 4.0"
   project_id   = data.google_client_config.main.project
-  network_name = "default" # "${local.prefix}vpc"
+  network_name = "${local.prefix}vpc"
   routing_mode = "GLOBAL"
 
   subnets = [
