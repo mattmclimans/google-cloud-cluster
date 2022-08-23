@@ -13,40 +13,35 @@ locals {
 data "google_client_config" "main" {}
 
 resource "random_string" "main" {
-  length      = 3
-  min_lower   = 3
+  length      = 5
+  min_lower   = 5
   special     = false
 }
 
-module "vpc" {
-  source       = "terraform-google-modules/network/google"
-  version      = "~> 4.0"
-  project_id   = data.google_client_config.main.project
-  network_name = "${local.prefix}vpc"
-  routing_mode = "GLOBAL"
+# -------------------------------------------------------------------------------
+# Create VPC network
+resource "google_compute_network" "main" {
+  project                 = data.google_client_config.main.project
+  name                    = "${local.prefix}vpc"
+}
 
-  subnets = [
-    {
-      subnet_name   = "${local.prefix}${var.region}-subnet"
-      subnet_ip     = var.subnet_cidr
-      subnet_region = var.region
-    }
-  ]
+resource "google_compute_subnetwork" "main" {
+  name          = "${local.prefix}${var.region}-subnet"
+  ip_cidr_range = var.subnet_cidr
+  region        = var.region
+  network       = google_compute_network.main.id
+}
 
-  firewall_rules = [
-    {
-      name      = "${local.prefix}vpc-ingress"
-      direction = "INGRESS"
-      priority  = "100"
-      ranges    = ["0.0.0.0/0"]
-      allow = [
-        {
-          protocol = "all"
-          ports    = []
-        }
-      ]
-    }
-  ]
+resource "google_compute_firewall" "main" {
+  name          = "${local.prefix}ingress-allow-all"
+  network       = google_compute_network.main.id
+  direction     = "INGRESS"
+  source_ranges = ["0.0.0.0/0"]
+
+  allow {
+    protocol = "all"
+    ports    = []
+  }
 }
 
 # -------------------------------------------------------------------------------
@@ -59,8 +54,8 @@ resource "google_container_cluster" "cluster" {
   remove_default_node_pool = true
   initial_node_count       = 1
 
-  network    = module.vpc.network_id
-  subnetwork = module.vpc.subnets_self_links[0]
+  network    = google_compute_network.main.id
+  subnetwork = google_compute_subnetwork.main.self_link
 
   network_policy {
     # Enabling NetworkPolicy for clusters with DatapathProvider=ADVANCED_DATAPATH is not allowed (yields error)
