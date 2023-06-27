@@ -19,7 +19,7 @@ variable "prefix" {
 # variables - cluster.tf
 variable "k8s_version" {
   description = "The version of Kubernetes"
-  default     = "1.22.12-gke.1200" // Pull version: gcloud container get-server-config --zone=us-east1-a --format=json
+  default     = "1.23.17-gke.300" // Pull version: gcloud container get-server-config --zone=us-east1-a --format=json
 }
 
 variable "k8s_enable_dpv2" {
